@@ -1,0 +1,46 @@
+# LAMMPS input file - Lennard-Jones fluid benchmark
+# Simple test for MPI parallel performance
+
+# Initialization
+units           lj
+atom_style      atomic
+atom_modify     map array
+
+# Simulation box
+lattice         fcc 0.8442
+region          box block 0 20 0 20 0 20
+create_box      1 box
+create_atoms    1 box
+mass            1 1.0
+
+# Interatomic potential
+pair_style      lj/cut 2.5
+pair_coeff      1 1 1.0 1.0 2.5
+
+# Initial velocity
+velocity        all create 1.44 87287 loop geom
+
+# Neighbor settings
+neighbor        0.3 bin
+neigh_modify    delay 0 every 20 check no
+
+# Timestep
+timestep        0.005
+
+# Ensemble
+fix             1 all nve
+
+# Thermodynamic output
+thermo_style    custom step temp press pe ke etotal vol density
+thermo          100
+
+# Performance info
+timer           full
+
+# Run simulation
+run             5000
+
+# Print timing information
+print           "===== Performance Summary ====="
+print           "Total atoms: $(atoms)"
+print           "Simulation completed successfully"

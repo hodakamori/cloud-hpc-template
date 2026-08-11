@@ -1,0 +1,10 @@
+[project]
+name = "cloud-hpc-template"
+version = "0.1.0"
+description = "AWS ParallelCluster HPC cluster template managed by Terraform"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "aws-parallelcluster>=3.14.1",
+    "awscli>=1.44.15",
+]

@@ -1,0 +1,65 @@
+# Reference AWS ParallelCluster configuration (manual deployment path).
+#
+# The Terraform workflow does NOT use this file: `terraform apply` renders
+# terraform/config.yaml.tpl into terraform/generated-config.yaml with the real
+# resource IDs filled in. Keep this file only if you want to run
+# `pcluster create-cluster` by hand against pre-existing infrastructure.
+#
+# Replace every <...> placeholder before use. The matching values are printed by
+# `terraform output` (public_subnet_id, private_subnet_id, s3_script_path,
+# efs_file_system_id, key_name).
+Region: ap-northeast-1
+Image:
+  Os: ubuntu2204
+HeadNode:
+  InstanceType: t3.medium
+  Networking:
+    SubnetId: <public-subnet-id>
+    ElasticIp: true
+  Ssh:
+    KeyName: pcluster-key-ed25519
+  Iam:
+    AdditionalIamPolicies:
+      - Policy: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+  CustomActions:
+    OnNodeConfigured:
+      Script: s3://<parallelcluster-bucket>/scripts/install_software.sh
+Scheduling:
+  Scheduler: slurm
+  SlurmQueues:
+    - Name: cpu
+      ComputeResources:
+        - Name: t3medium
+          InstanceType: t3.medium
+          MinCount: 0
+          MaxCount: 2
+      Networking:
+        SubnetIds:
+          - <private-subnet-id>
+      Iam:
+        AdditionalIamPolicies:
+          - Policy: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      CustomActions:
+        OnNodeConfigured:
+          Script: s3://<parallelcluster-bucket>/scripts/install_software.sh
+    - Name: gpu
+      ComputeResources:
+        - Name: g4dnxlarge
+          InstanceType: g4dn.xlarge
+          MinCount: 0
+          MaxCount: 2
+      Networking:
+        SubnetIds:
+          - <private-subnet-id>
+      Iam:
+        AdditionalIamPolicies:
+          - Policy: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      CustomActions:
+        OnNodeConfigured:
+          Script: s3://<parallelcluster-bucket>/scripts/install_software.sh
+SharedStorage:
+  - MountDir: /shared
+    Name: efs-shared
+    StorageType: Efs
+    EfsSettings:
+      FileSystemId: <efs-file-system-id>
