@@ -8,6 +8,7 @@ terraform.tfstate.backup
 
 # Generated files
 generated-config.yaml
+generated-image-config.yaml
 
 # Sensitive files
 *.pem

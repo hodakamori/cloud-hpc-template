@@ -33,6 +33,11 @@ Scheduling:
       PasswordSecretArn: ${slurm_database_secret_arn}
   SlurmQueues:
     - Name: cpu
+%{ if custom_ami != "" ~}
+      # Queue-level custom AMI, built from install_software.sh by pcluster build-image.
+      Image:
+        CustomAmi: ${custom_ami}
+%{ endif ~}
       ComputeResources:
         - Name: t3medium
           InstanceType: t3.medium
@@ -48,6 +53,10 @@ Scheduling:
         OnNodeConfigured:
           Script: ${s3_script_path}
     - Name: gpu
+%{ if custom_ami != "" ~}
+      Image:
+        CustomAmi: ${custom_ami}
+%{ endif ~}
       ComputeResources:
         - Name: g4dnxlarge
           InstanceType: g4dn.xlarge

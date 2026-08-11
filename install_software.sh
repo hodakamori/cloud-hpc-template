@@ -65,6 +65,28 @@ cp ~/.local/bin/uv /usr/local/bin/
 chmod 755 /usr/local/bin/uv
 echo "uv installation completed"
 
+# --- Demo users for per-user Slurm accounting ---
+# Fixed UIDs so the same identities exist on the head node and every compute
+# node. Home directories live on the shared EFS mount (/shared), so they are
+# consistent cluster-wide.
+echo "Creating demo users for Slurm accounting..."
+groupadd -g 7000 hpcusers 2>/dev/null || true
+mkdir -p /shared/home
+for entry in "alice:7001" "bob:7002" "carol:7003" "dave:7004"; do
+    u="${entry%%:*}"
+    uid="${entry##*:}"
+    if ! id "$u" >/dev/null 2>&1; then
+        useradd -M -d "/shared/home/$u" -u "$uid" -g hpcusers -s /bin/bash "$u"
+    fi
+    if [ ! -d "/shared/home/$u" ]; then
+        mkdir -p "/shared/home/$u"
+        cp -n /etc/skel/.bash* "/shared/home/$u/" 2>/dev/null || true
+        chown -R "$uid:7000" "/shared/home/$u"
+        chmod 700 "/shared/home/$u"
+    fi
+done
+echo "Demo users created: alice bob carol dave"
+
 echo "Software installation completed at $(date)"
 echo "uv installed at: /usr/local/bin/uv"
 echo "build-essential, cmake, openmpi installed via apt"

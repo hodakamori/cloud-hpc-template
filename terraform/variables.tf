@@ -135,3 +135,35 @@ variable "db_skip_final_snapshot" {
   type        = bool
   default     = true
 }
+
+# --- Optional custom AMI built from install_software.sh (pcluster build-image) ---
+
+variable "build_custom_ami" {
+  description = "When true, build a custom AMI from install_software.sh and use it as the compute queues' CustomAmi. Adds 30-90 minutes to terraform apply."
+  type        = bool
+  default     = false
+}
+
+variable "image_os" {
+  description = "OS for the custom image. Must match the Image/Os in the cluster config (ubuntu2204)."
+  type        = string
+  default     = "ubuntu2204"
+}
+
+variable "image_id_prefix" {
+  description = "Prefix for the pcluster image id. A short hash of install_software.sh is appended so a changed script triggers a rebuild."
+  type        = string
+  default     = "hpc-baked"
+}
+
+variable "parent_image_ami" {
+  description = "Base AMI for the build (ParentImage). Leave empty to auto-resolve the official ParallelCluster AMI for image_os via `pcluster list-official-images`."
+  type        = string
+  default     = ""
+}
+
+variable "image_builder_instance_type" {
+  description = "EC2 instance type used to build the custom AMI. Use a GPU instance (e.g. g4dn.xlarge) if you want CUDA baked into the image."
+  type        = string
+  default     = "c5.xlarge"
+}

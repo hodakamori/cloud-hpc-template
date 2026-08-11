@@ -14,6 +14,10 @@ resource "local_file" "pcluster_config" {
     slurm_database_secret_arn   = aws_secretsmanager_secret.slurm_accounting.arn
     slurm_db_secret_policy_arn  = aws_iam_policy.slurm_db_secret_read.arn
     db_client_security_group_id = aws_security_group.db_client.id
+
+    # Empty unless var.build_custom_ami is true; then it is the AMI baked from
+    # install_software.sh, applied to the compute queues via Image/CustomAmi.
+    custom_ami = local.custom_ami
   })
   filename = "${path.module}/generated-config.yaml"
 

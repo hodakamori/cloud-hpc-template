@@ -147,6 +147,22 @@ output "parallelcluster_config_snippet" {
   EOT
 }
 
+# Custom AMI Outputs (only meaningful when build_custom_ami = true)
+output "custom_ami_enabled" {
+  description = "Whether a custom AMI was built and applied to the compute queues"
+  value       = var.build_custom_ami
+}
+
+output "custom_ami_image_id" {
+  description = "pcluster image id used for the build (empty when disabled)"
+  value       = var.build_custom_ami ? local.image_id : ""
+}
+
+output "custom_ami_id" {
+  description = "AMI id baked from install_software.sh and used as the queues' CustomAmi (empty when disabled)"
+  value       = local.custom_ami
+}
+
 # ParallelCluster Outputs
 output "cluster_name" {
   description = "Name of the ParallelCluster"

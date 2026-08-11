@@ -41,6 +41,16 @@ db_deletion_protection = false
 # Set to false to keep a final snapshot of the accounting data on destroy.
 db_skip_final_snapshot = true
 
+# --- Optional: bake install_software.sh into a custom AMI ---
+# When true, `pcluster build-image` builds an AMI from install_software.sh and
+# the cpu/gpu queues launch from it (faster node boot, no OnNodeConfigured wait).
+# Adds 30-90 minutes to `terraform apply`.
+build_custom_ami = false
+# image_os                    = "ubuntu2204"   # must match Image/Os
+# image_id_prefix             = "hpc-baked"
+# parent_image_ami            = ""             # empty = auto-resolve official base AMI
+# image_builder_instance_type = "c5.xlarge"    # use g4dn.xlarge to bake CUDA
+
 # Resource Tags
 tags = {
   Project     = "ParallelCluster"
