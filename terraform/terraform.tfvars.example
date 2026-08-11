@@ -5,16 +5,41 @@ aws_region = "ap-northeast-1"
 project_name = "pcluster"
 
 # VPC and Subnet Configuration
-vpc_cidr             = "10.0.0.0/16"
-public_subnet_cidr   = "10.0.0.0/24"
-private_subnet_cidr  = "10.0.1.0/24"
-availability_zone    = "ap-northeast-1a"
+vpc_cidr            = "10.0.0.0/16"
+public_subnet_cidr  = "10.0.0.0/24"
+private_subnet_cidr = "10.0.1.0/24"
+availability_zone   = "ap-northeast-1a"
+
+# Second AZ and subnet, required by the RDS DB subnet group
+availability_zone_secondary   = "ap-northeast-1c"
+private_subnet_secondary_cidr = "10.0.2.0/24"
 
 # SSH Key Pair name
 key_name = "pcluster-key-ed25519"
 
 # ParallelCluster Configuration
 cluster_name = "my-cluster"
+
+# Slurm accounting database (Amazon RDS for MySQL)
+db_instance_class         = "db.t4g.micro"
+db_engine_version         = "8.0"
+db_parameter_group_family = "mysql8.0"
+db_username               = "slurmadmin"
+db_port                   = 3306
+db_allocated_storage      = 20
+db_max_allocated_storage  = 100
+
+# Set backup retention to 0 to disable automated backups.
+db_backup_retention_period = 7
+
+# Multi-AZ roughly doubles the database cost. Leave false for testing.
+db_multi_az = false
+
+# Leave deletion_protection false so that terraform destroy can remove the database.
+db_deletion_protection = false
+
+# Set to false to keep a final snapshot of the accounting data on destroy.
+db_skip_final_snapshot = true
 
 # Resource Tags
 tags = {

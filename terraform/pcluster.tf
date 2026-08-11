@@ -7,12 +7,20 @@ resource "local_file" "pcluster_config" {
     key_name          = aws_key_pair.pcluster.key_name
     s3_script_path    = "s3://${aws_s3_bucket.parallelcluster.id}/${aws_s3_object.install_software.key}"
     efs_id            = aws_efs_file_system.shared.id
+
+    # Slurm accounting
+    slurm_database_uri          = "${aws_db_instance.slurm_accounting.address}:${aws_db_instance.slurm_accounting.port}"
+    slurm_database_user         = aws_db_instance.slurm_accounting.username
+    slurm_database_secret_arn   = aws_secretsmanager_secret.slurm_accounting.arn
+    slurm_db_secret_policy_arn  = aws_iam_policy.slurm_db_secret_read.arn
+    db_client_security_group_id = aws_security_group.db_client.id
   })
   filename = "${path.module}/generated-config.yaml"
 
   depends_on = [
     aws_efs_mount_target.private,
-    aws_s3_object.install_software
+    aws_s3_object.install_software,
+    aws_secretsmanager_secret_version.slurm_accounting
   ]
 }
 
@@ -81,7 +89,10 @@ resource "null_resource" "pcluster_create" {
   depends_on = [
     local_file.pcluster_config,
     aws_vpc_endpoint.s3,
-    aws_nat_gateway.main
+    aws_nat_gateway.main,
+    # The database must be reachable before slurmdbd starts on the head node.
+    aws_db_instance.slurm_accounting,
+    aws_vpc_security_group_ingress_rule.rds_from_client
   ]
 }
 

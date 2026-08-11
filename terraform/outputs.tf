@@ -42,6 +42,47 @@ output "s3_script_path" {
   value       = "s3://${aws_s3_bucket.parallelcluster.id}/${aws_s3_object.install_software.key}"
 }
 
+# Slurm Accounting Database Outputs
+output "slurm_database_endpoint" {
+  description = "Endpoint of the Slurm accounting database (host:port), as used for SlurmSettings/Database/Uri"
+  value       = "${aws_db_instance.slurm_accounting.address}:${aws_db_instance.slurm_accounting.port}"
+}
+
+output "slurm_database_address" {
+  description = "Hostname of the Slurm accounting database"
+  value       = aws_db_instance.slurm_accounting.address
+}
+
+output "slurm_database_username" {
+  description = "Master user name of the Slurm accounting database"
+  value       = aws_db_instance.slurm_accounting.username
+}
+
+output "slurm_database_secret_arn" {
+  description = "Secrets Manager ARN holding the Slurm accounting database password"
+  value       = aws_secretsmanager_secret.slurm_accounting.arn
+}
+
+output "slurm_database_password_command" {
+  description = "Command to read the Slurm accounting database password"
+  value       = "aws secretsmanager get-secret-value --secret-id ${aws_secretsmanager_secret.slurm_accounting.arn} --region ${var.aws_region} --query SecretString --output text"
+}
+
+output "slurm_database_note" {
+  description = "How the per-cluster accounting database is named"
+  value       = "slurmdbd creates its own database on this server, named after the cluster (${var.cluster_name}) via slurmdbd.conf StorageLoc."
+}
+
+output "db_client_security_group_id" {
+  description = "Security group attached to the head node that grants database access"
+  value       = aws_security_group.db_client.id
+}
+
+output "rds_security_group_id" {
+  description = "Security group attached to the Slurm accounting database"
+  value       = aws_security_group.rds.id
+}
+
 # Key Pair Outputs
 output "key_name" {
   description = "Name of the EC2 key pair"
@@ -64,13 +105,23 @@ output "parallelcluster_config_snippet" {
     HeadNode:
       Networking:
         SubnetId: ${aws_subnet.public.id}
+        AdditionalSecurityGroups:
+          - ${aws_security_group.db_client.id}
       Ssh:
         KeyName: ${aws_key_pair.pcluster.key_name}
+      Iam:
+        AdditionalIamPolicies:
+          - Policy: ${aws_iam_policy.slurm_db_secret_read.arn}
       CustomActions:
         OnNodeConfigured:
           Script: s3://${aws_s3_bucket.parallelcluster.id}/${aws_s3_object.install_software.key}
 
     Scheduling:
+      SlurmSettings:
+        Database:
+          Uri: ${aws_db_instance.slurm_accounting.address}:${aws_db_instance.slurm_accounting.port}
+          UserName: ${aws_db_instance.slurm_accounting.username}
+          PasswordSecretArn: ${aws_secretsmanager_secret.slurm_accounting.arn}
       SlurmQueues:
         - Name: cpu
           Networking:
@@ -121,14 +172,18 @@ output "ssh_key_path" {
 output "infrastructure_summary" {
   description = "Summary of created infrastructure"
   value = {
-    vpc_id            = aws_vpc.main.id
-    public_subnet_id  = aws_subnet.public.id
-    private_subnet_id = aws_subnet.private.id
-    efs_id            = aws_efs_file_system.shared.id
-    s3_bucket         = aws_s3_bucket.parallelcluster.id
-    key_name          = aws_key_pair.pcluster.key_name
-    region            = var.aws_region
-    availability_zone = var.availability_zone
-    cluster_name      = var.cluster_name
+    vpc_id                      = aws_vpc.main.id
+    public_subnet_id            = aws_subnet.public.id
+    private_subnet_id           = aws_subnet.private.id
+    private_subnet_secondary_id = aws_subnet.private_secondary.id
+    efs_id                      = aws_efs_file_system.shared.id
+    s3_bucket                   = aws_s3_bucket.parallelcluster.id
+    key_name                    = aws_key_pair.pcluster.key_name
+    region                      = var.aws_region
+    availability_zone           = var.availability_zone
+    availability_zone_secondary = var.availability_zone_secondary
+    cluster_name                = var.cluster_name
+    slurm_database_endpoint     = "${aws_db_instance.slurm_accounting.address}:${aws_db_instance.slurm_accounting.port}"
+    slurm_database_secret_arn   = aws_secretsmanager_secret.slurm_accounting.arn
   }
 }

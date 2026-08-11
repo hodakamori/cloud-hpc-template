@@ -32,7 +32,8 @@ apt-get install -y \
     libfftw3-dev \
     python3 \
     python3-dev \
-    libssl-dev
+    libssl-dev \
+    mysql-client
 
 # MPI is already in PATH on Ubuntu with openmpi-bin package
 echo "MPI setup completed (already in PATH)"
